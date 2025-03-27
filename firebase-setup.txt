@@ -1,0 +1,104 @@
+# Firebase Setup Instructions
+
+## 1. Create a Firebase Project
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+2. Click on "Add project"
+3. Enter a name for your project (e.g., "Notes App")
+4. Follow the setup wizard (enable Google Analytics if desired)
+5. Click "Create project"
+
+## 2. Register your Flutter App with Firebase
+
+### For Android:
+
+1. In the Firebase console, click on the Android icon
+2. Enter your Android package name (found in `android/app/build.gradle` under `applicationId`)
+3. Enter a nickname for your app (optional)
+4. Enter your SHA-1 certificate (optional but recommended for authentication)
+5. Click "Register app"
+6. Download the `google-services.json` file
+7. Place the file in the `android/app` directory of your Flutter project
+8. Follow the instructions to update your build.gradle files:
+
+In your project-level `android/build.gradle` file, add:
+```gradle
+buildscript {
+  dependencies {
+    // Add this line
+    classpath 'com.google.gms:google-services:4.3.15'
+  }
+}
+```
+
+In your app-level `android/app/build.gradle` file, add:
+```gradle
+// Add this line at the bottom
+apply plugin: 'com.google.gms.google-services'
+```
+
+### For iOS:
+
+1. In the Firebase console, click on the iOS icon
+2. Enter your iOS bundle ID (found in Xcode under Runner > General > Bundle Identifier)
+3. Enter a nickname for your app (optional)
+4. Click "Register app"
+5. Download the `GoogleService-Info.plist` file
+6. Add the file to your Xcode project (open Xcode, right-click on Runner > Add Files to "Runner")
+7. Place the file in the correct location and add it to all targets
+
+## 3. Enable Firestore
+
+1. In the Firebase console, navigate to "Firestore Database"
+2. Click "Create database"
+3. Choose a starting mode (start in test mode for development)
+4. Select a location for your database
+5. Click "Enable"
+
+## 4. Create Firestore Rules
+
+In the Firestore console, go to the "Rules" tab and set up basic security rules:
+
+```
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
+
+This simple rule allows authenticated users to read and write to the notes collection.
+
+## 5. Update Android Build Configuration
+
+If your app targets Android 12 (API level 31) or higher, you need to add the Internet permission to your `AndroidManifest.xml` file:
+
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    ...
+</manifest>
+```
+
+## 6. Update iOS Build Configuration
+
+For iOS, you need to add a description for network usage to your `Info.plist` file:
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
+</dict>
+```
+
+## 7. Run the App
+
+Now your Flutter app should be correctly configured to use Firebase:
+
+```bash
+flutter run
+```
