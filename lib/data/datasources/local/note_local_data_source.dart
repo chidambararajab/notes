@@ -108,7 +108,7 @@ class NoteLocalDataSourceImpl implements NoteLocalDataSource {
       final List<Map<String, dynamic>> maps = await db.query(
         DatabaseHelper.table,
         where: '${DatabaseHelper.columnIsSynced} = ?',
-        whereArgs: [0],
+        whereArgs: [0], // 0 means not synced
       );
 
       return List.generate(maps.length, (i) => NoteModel.fromJson(maps[i]));
