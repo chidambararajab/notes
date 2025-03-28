@@ -1,4 +1,6 @@
-// lib/data/models/note_model.dart
+// Update lib/data/models/note_model.dart
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../../domain/entities/note.dart';
 
 class NoteModel extends Note {
@@ -9,6 +11,7 @@ class NoteModel extends Note {
     required DateTime createdAt,
     required DateTime updatedAt,
     bool isSynced = false,
+    DateTime? reminderDate, // Add reminder support
   }) : super(
          id: id,
          title: title,
@@ -16,6 +19,7 @@ class NoteModel extends Note {
          createdAt: createdAt,
          updatedAt: updatedAt,
          isSynced: isSynced,
+         reminderDate: reminderDate,
        );
 
   factory NoteModel.fromJson(Map<String, dynamic> json) {
@@ -26,6 +30,10 @@ class NoteModel extends Note {
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
       isSynced: json['is_synced'] == 1,
+      reminderDate:
+          json['reminder_date'] != null
+              ? DateTime.parse(json['reminder_date'])
+              : null,
     );
   }
 
@@ -37,6 +45,10 @@ class NoteModel extends Note {
       createdAt: (json['created_at'] as dynamic).toDate(),
       updatedAt: (json['updated_at'] as dynamic).toDate(),
       isSynced: true,
+      reminderDate:
+          json['reminder_date'] != null
+              ? (json['reminder_date'] as dynamic).toDate()
+              : null,
     );
   }
 
@@ -48,16 +60,23 @@ class NoteModel extends Note {
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
       'is_synced': isSynced ? 1 : 0,
+      'reminder_date': reminderDate?.toIso8601String(),
     };
   }
 
   Map<String, dynamic> toFirestore() {
-    return {
+    final data = {
       'title': title,
       'content': content,
       'created_at': createdAt,
       'updated_at': updatedAt,
     };
+
+    if (reminderDate != null) {
+      data['reminder_date'] = Timestamp.fromDate(reminderDate!);
+    }
+
+    return data;
   }
 
   factory NoteModel.fromEntity(Note note) {
@@ -68,6 +87,7 @@ class NoteModel extends Note {
       createdAt: note.createdAt,
       updatedAt: note.updatedAt,
       isSynced: note.isSynced,
+      reminderDate: note.reminderDate,
     );
   }
 }

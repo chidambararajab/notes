@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
+import 'package:notes/data/services/notification_service.dart';
+import 'package:notes/di/service_locator.dart';
 import '../../../core/network/network_info.dart';
 import '../../../core/usecases/usecase.dart';
 import '../../../domain/usecases/sync_notes.dart';
@@ -13,6 +15,7 @@ part 'sync_state.dart';
 class SyncBloc extends Bloc<SyncEvent, SyncState> {
   final SyncNotes syncNotes;
   final NetworkInfo networkInfo;
+  final NotificationService _notificationService = sl<NotificationService>();
   StreamSubscription? _connectivitySubscription;
 
   SyncBloc({required this.syncNotes, required this.networkInfo})
@@ -47,6 +50,7 @@ class SyncBloc extends Bloc<SyncEvent, SyncState> {
     _connectivitySubscription = null;
   }
 
+  // Update the _onTriggerSync method
   Future<void> _onTriggerSync(
     TriggerSync event,
     Emitter<SyncState> emit,
@@ -55,48 +59,63 @@ class SyncBloc extends Bloc<SyncEvent, SyncState> {
 
     if (!isConnected) {
       emit(const SyncFailure('No internet connection'));
+      _notificationService.showSyncNotification(
+        title: 'Sync Failed',
+        body: 'No internet connection available. Will retry when connected.',
+      );
       return;
     }
 
     emit(SyncInProgress());
+    _notificationService.showSyncNotification(
+      title: 'Syncing Notes',
+      body: 'Syncing your notes with the cloud...',
+    );
 
     final result = await syncNotes(NoParams());
 
     result.fold(
-      (failure) => emit(const SyncFailure('Failed to sync notes')),
-      (_) => emit(SyncSuccess()),
+      (failure) {
+        emit(const SyncFailure('Failed to sync notes'));
+        _notificationService.showSyncNotification(
+          title: 'Sync Failed',
+          body:
+              'There was a problem syncing your notes. Please try again later.',
+        );
+      },
+      (_) {
+        emit(SyncSuccess());
+        _notificationService.showSyncNotification(
+          title: 'Sync Complete',
+          body: 'Your notes have been successfully synced to the cloud.',
+        );
+      },
     );
   }
 
+  // Update the _onConnectivityChanged method
   Future<void> _onConnectivityChanged(
     ConnectivityChanged event,
     Emitter<SyncState> emit,
   ) async {
-    // Previous connectivity state
-    final previousState = state;
-    bool wasConnected = false;
-    if (previousState is SyncStatus) {
-      wasConnected = previousState.isConnected;
-    }
-
-    // Current connectivity state
     emit(SyncStatus(isConnected: event.isConnected));
 
-    // If connectivity was restored (was offline, now online)
-    if (!wasConnected && event.isConnected) {
-      // _notificationService.showSyncNotification(
-      //   title: 'Connection Restored',
-      //   body: 'Internet connection restored. Starting sync...',
-      // );
+    if (event.isConnected) {
+      // Show notification when connection is restored
+      _notificationService.showSyncNotification(
+        title: 'Connection Restored',
+        body: 'Internet connection restored. Starting sync...',
+      );
 
-      // Trigger sync when internet becomes available
+      // Automatically trigger sync when internet becomes available
       add(const TriggerSync());
-    } else if (wasConnected && !event.isConnected) {
+    } else {
       // Notify when connection is lost
-      // _notificationService.showSyncNotification(
-      //   title: 'Connection Lost',
-      //   body: 'Internet connection lost. Changes will be synced when connection is restored.',
-      // );
+      _notificationService.showSyncNotification(
+        title: 'Connection Lost',
+        body:
+            'Internet connection lost. Changes will be synced when connection is restored.',
+      );
     }
   }
 

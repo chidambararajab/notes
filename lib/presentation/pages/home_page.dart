@@ -42,6 +42,14 @@ class _HomePageState extends State<HomePage> {
             },
             tooltip: 'Sync notes',
           ),
+          // Add this button for notification testing
+          IconButton(
+            icon: const Icon(Icons.notifications),
+            onPressed: () {
+              Navigator.pushNamed(context, RouteConstants.notificationDebug);
+            },
+            tooltip: 'Test Notifications',
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 16.0),
             child: Center(child: SyncStatusWidget()),

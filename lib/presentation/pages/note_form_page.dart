@@ -1,6 +1,7 @@
-// lib/presentation/pages/note_form_page.dart
+// Update lib/presentation/pages/note_form_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 import '../blocs/note_form_bloc/note_form_bloc.dart';
 
 class NoteFormPage extends StatefulWidget {
@@ -85,6 +86,7 @@ class _NoteFormPageState extends State<NoteFormPage> {
                 padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
+                    // Title field
                     TextField(
                       controller: _titleController,
                       decoration: const InputDecoration(
@@ -98,6 +100,13 @@ class _NoteFormPageState extends State<NoteFormPage> {
                       },
                     ),
                     const SizedBox(height: 16),
+
+                    // Reminder section
+                    _buildReminderSection(context, state),
+
+                    const SizedBox(height: 16),
+
+                    // Content field
                     Expanded(
                       child: TextField(
                         controller: _contentController,
@@ -145,6 +154,115 @@ class _NoteFormPageState extends State<NoteFormPage> {
         ),
       ),
     );
+  }
+
+  // New method to build the reminder section
+  Widget _buildReminderSection(BuildContext context, NoteFormLoaded state) {
+    return Card(
+      elevation: 2,
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Reminder',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                Switch(
+                  value: state.reminderDate != null,
+                  onChanged: (value) {
+                    if (value) {
+                      // If turning on, show date picker with a default date (tomorrow)
+                      _selectReminderDateTime(
+                        context,
+                        initialDate: DateTime.now().add(
+                          const Duration(days: 1),
+                        ),
+                      );
+                    } else {
+                      // If turning off, clear the reminder
+                      context.read<NoteFormBloc>().add(
+                        const ClearNoteReminder(),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+            if (state.reminderDate != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Date: ${DateFormat('EEE, MMM d, yyyy').format(state.reminderDate!)}',
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.edit_calendar, size: 20),
+                    onPressed:
+                        () => _selectReminderDateTime(
+                          context,
+                          initialDate: state.reminderDate,
+                        ),
+                  ),
+                ],
+              ),
+              Text(
+                'Time: ${DateFormat('h:mm a').format(state.reminderDate!)}',
+                style: const TextStyle(fontSize: 14),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  // Method to show date & time pickers
+  Future<void> _selectReminderDateTime(
+    BuildContext context, {
+    DateTime? initialDate,
+  }) async {
+    final DateTime now = DateTime.now();
+    initialDate ??= now.add(const Duration(days: 1));
+
+    // Show date picker
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate:
+          initialDate.isAfter(now)
+              ? initialDate
+              : now.add(const Duration(days: 1)),
+      firstDate: now,
+      lastDate: DateTime(now.year + 5),
+    );
+
+    if (pickedDate != null) {
+      // Show time picker
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(initialDate),
+      );
+
+      if (pickedTime != null) {
+        // Combine date and time
+        final DateTime reminderDateTime = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+
+        // Add event to update reminder date
+        context.read<NoteFormBloc>().add(SetNoteReminder(reminderDateTime));
+      }
+    }
   }
 
   void _saveNote() {

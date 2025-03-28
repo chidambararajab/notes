@@ -1,4 +1,4 @@
-// lib/presentation/blocs/note_form_bloc/note_form_event.dart
+// Update lib/presentation/blocs/note_form_bloc/note_form_event.dart
 part of 'note_form_bloc.dart';
 
 abstract class NoteFormEvent extends Equatable {
@@ -33,6 +33,21 @@ class ChangeNoteContent extends NoteFormEvent {
 
   @override
   List<Object> get props => [content];
+}
+
+// New event for setting a reminder
+class SetNoteReminder extends NoteFormEvent {
+  final DateTime reminderDate;
+
+  const SetNoteReminder(this.reminderDate);
+
+  @override
+  List<Object> get props => [reminderDate];
+}
+
+// New event for clearing a reminder
+class ClearNoteReminder extends NoteFormEvent {
+  const ClearNoteReminder();
 }
 
 class SaveNote extends NoteFormEvent {

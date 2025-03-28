@@ -1,8 +1,10 @@
-// lib/data/datasources/local/database_helper.dart
-import 'package:sqflite/sqflite.dart';
+// Update lib/data/datasources/local/database_helper.dart
+
+import 'dart:io';
+
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
-import 'dart:io';
+import 'package:sqflite/sqflite.dart';
 
 class DatabaseHelper {
   static const _databaseName = "notes_app.db";
@@ -16,6 +18,7 @@ class DatabaseHelper {
   static const columnCreatedAt = 'created_at';
   static const columnUpdatedAt = 'updated_at';
   static const columnIsSynced = 'is_synced';
+  static const columnReminderDate = 'reminder_date'; // New column
 
   // Singleton pattern
   DatabaseHelper._privateConstructor();
@@ -46,7 +49,8 @@ class DatabaseHelper {
         $columnContent TEXT NOT NULL,
         $columnCreatedAt TEXT NOT NULL,
         $columnUpdatedAt TEXT NOT NULL,
-        $columnIsSynced INTEGER NOT NULL
+        $columnIsSynced INTEGER NOT NULL,
+        $columnReminderDate TEXT
       )
     ''');
   }

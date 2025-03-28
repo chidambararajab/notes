@@ -9,8 +9,10 @@ import '../presentation/blocs/sync_bloc/sync_bloc.dart';
 import '../presentation/navigation/app_router.dart';
 import '../presentation/navigation/route_constants.dart';
 
-class App extends StatelessWidget {
-  const App({Key? key}) : super(key: key);
+class MyApp extends StatelessWidget {
+  final GlobalKey<NavigatorState> navigatorKey;
+
+  const MyApp({Key? key, required this.navigatorKey}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -23,6 +25,7 @@ class App extends StatelessWidget {
       child: MaterialApp(
         title: 'Notes App',
         theme: AppTheme.lightTheme,
+        navigatorKey: navigatorKey, // Add navigator key
         onGenerateRoute: AppRouter.generateRoute,
         initialRoute: RouteConstants.home,
       ),

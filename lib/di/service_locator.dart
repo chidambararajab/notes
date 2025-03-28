@@ -1,8 +1,10 @@
 // lib/di/service_locator.dart
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:get_it/get_it.dart';
 import 'package:internet_connection_checker/internet_connection_checker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:notes/data/services/background_sync_service.dart';
+import 'package:notes/data/services/notification_service.dart';
 import '../core/network/network_info.dart';
 import '../data/datasources/local/database_helper.dart';
 import '../data/datasources/local/note_local_data_source.dart';
@@ -68,4 +70,8 @@ Future<void> init() async {
   sl.registerLazySingleton(() => DatabaseHelper.instance);
 
   sl.registerLazySingleton(() => BackgroundSyncService(syncNotes: sl()));
+
+  // Notifications
+  sl.registerLazySingleton(() => FlutterLocalNotificationsPlugin());
+  sl.registerLazySingleton(() => NotificationService(sl()));
 }
